@@ -12,6 +12,102 @@ async function listar(req, res) {
   res.json(data);
 }
 
+async function obtenerCuidadoresDisponibles() {
+  const { data: cuidadores, error } = await db
+    .from('cuidadores')
+    .select('id, usuario_id, titulo, descripcion, especialidades, tarifa_hora, anios_experiencia')
+    .eq('disponible', true)
+    .eq('verificado', true);
+
+  if (error) throw error;
+  if (!cuidadores || cuidadores.length === 0) return [];
+
+  const ids = cuidadores.map((cuidador) => cuidador.id);
+  const [{ data: ubicaciones, error: ubicacionesError }, { data: servicios, error: serviciosError }] =
+    await Promise.all([
+      db
+        .from('ubicaciones_libres')
+        .select('cuidador_id, latitud, longitud, precision_metros, direccion_formateada, actualizado_en')
+        .in('cuidador_id', ids),
+      db
+        .from('servicios')
+        .select('cuidador_id, inicio, fin')
+        .eq('estado', 'activo')
+        .in('cuidador_id', ids),
+    ]);
+
+  if (ubicacionesError) throw ubicacionesError;
+  if (serviciosError) throw serviciosError;
+
+  const ahora = Date.now();
+  const ocupados = new Set(
+    (servicios || [])
+      .filter(
+        (servicio) =>
+          (!servicio.inicio || new Date(servicio.inicio).getTime() <= ahora) &&
+          (!servicio.fin || new Date(servicio.fin).getTime() >= ahora)
+      )
+      .map((servicio) => String(servicio.cuidador_id))
+  );
+
+  const ubicacionesVigentes = new Map(
+    (ubicaciones || [])
+      .filter((ubicacion) => {
+        const antiguedad = ahora - new Date(ubicacion.actualizado_en).getTime();
+        return antiguedad >= 0 && antiguedad <= MAX_ANTIGUEDAD_MS;
+      })
+      .map((ubicacion) => [String(ubicacion.cuidador_id), ubicacion])
+  );
+
+  const libres = cuidadores.filter(
+    (cuidador) =>
+      !ocupados.has(String(cuidador.id)) && ubicacionesVigentes.has(String(cuidador.id))
+  );
+
+  if (libres.length === 0) return [];
+
+  const { data: usuarios, error: usuariosError } = await db
+    .from('usuarios')
+    .select('id, nombre')
+    .in('id', libres.map((cuidador) => cuidador.usuario_id));
+
+  if (usuariosError) throw usuariosError;
+
+  const nombres = new Map((usuarios || []).map((usuario) => [String(usuario.id), usuario.nombre]));
+
+  return libres.map((cuidador) => {
+    const ubicacion = ubicacionesVigentes.get(String(cuidador.id));
+    const { latitud, longitud, precision_metros } = redondearCoordenadas(
+      ubicacion.latitud,
+      ubicacion.longitud
+    );
+
+    return {
+      cuidador_id: cuidador.id,
+      nombre: nombres.get(String(cuidador.usuario_id)) || 'Cuidador',
+      titulo: cuidador.titulo,
+      descripcion: cuidador.descripcion,
+      especialidades: cuidador.especialidades,
+      tarifa_hora: cuidador.tarifa_hora,
+      anios_experiencia: cuidador.anios_experiencia,
+      disponible: true,
+      latitud,
+      longitud,
+      precision_metros,
+      direccion_formateada: ubicacion.direccion_formateada || null,
+      actualizado_en: ubicacion.actualizado_en,
+    };
+  });
+}
+
+async function listarDisponibles(req, res) {
+  try {
+    res.json(await obtenerCuidadoresDisponibles());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 async function obtener(req, res) {
   const { data, error } = await db
     .from('cuidadores')
@@ -97,83 +193,7 @@ async function eliminar(req, res) {
 // y sin un servicio activo en este momento.
 async function mapa(req, res) {
   try {
-    const { data: cuidadores, error } = await db
-      .from('cuidadores')
-      .select('id, usuario_id, especialidades, tarifa_hora, anios_experiencia')
-      .eq('disponible', true)
-      .eq('verificado', true);
-
-    if (error) return res.status(500).json({ error: error.message });
-    if (!cuidadores || cuidadores.length === 0) return res.json([]);
-
-    const ids = cuidadores.map((c) => c.id);
-
-    const [{ data: ubicaciones }, { data: servicios }] = await Promise.all([
-      db
-        .from('ubicaciones_libres')
-        .select('*')
-        .in('cuidador_id', ids),
-      db
-        .from('servicios')
-        .select('cuidador_id, inicio, fin')
-        .eq('estado', 'activo')
-        .in('cuidador_id', ids),
-    ]);
-
-    const ahora = Date.now();
-
-    // Un servicio activo (cita confirmada en curso) oculta al cuidador.
-    const ocupados = new Set(
-      (servicios || [])
-        .filter(
-          (s) =>
-            (!s.inicio || new Date(s.inicio).getTime() <= ahora) &&
-            (!s.fin || new Date(s.fin).getTime() >= ahora)
-        )
-        .map((s) => String(s.cuidador_id))
-    );
-
-    const ubicacionesVigentes = new Map(
-      (ubicaciones || [])
-        .filter((u) => ahora - new Date(u.actualizado_en).getTime() <= MAX_ANTIGUEDAD_MS)
-        .map((u) => [String(u.cuidador_id), u])
-    );
-
-    const libres = cuidadores.filter(
-      (c) => !ocupados.has(String(c.id)) && ubicacionesVigentes.has(String(c.id))
-    );
-
-    if (libres.length === 0) return res.json([]);
-
-    const { data: usuarios } = await db
-      .from('usuarios')
-      .select('id, nombre')
-      .in('id', libres.map((c) => c.usuario_id));
-
-    const nombres = new Map((usuarios || []).map((u) => [String(u.id), u.nombre]));
-
-    const resultado = libres.map((c) => {
-      const ubicacion = ubicacionesVigentes.get(String(c.id));
-      const { latitud, longitud, precision_metros } = redondearCoordenadas(
-        ubicacion.latitud,
-        ubicacion.longitud
-      );
-
-      return {
-        cuidador_id: c.id,
-        nombre: nombres.get(String(c.usuario_id)) || 'Cuidador',
-        especialidades: c.especialidades,
-        tarifa_hora: c.tarifa_hora,
-        anios_experiencia: c.anios_experiencia,
-        latitud,
-        longitud,
-        precision_metros,
-        direccion_formateada: ubicacion.direccion_formateada || null,
-        actualizado_en: ubicacion.actualizado_en,
-      };
-    });
-
-    res.json(resultado);
+    res.json(await obtenerCuidadoresDisponibles());
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -314,6 +334,7 @@ module.exports = {
   actualizar,
   eliminar,
   mapa,
+  listarDisponibles,
   cambiarDisponible,
   reportarUbicacion,
 };

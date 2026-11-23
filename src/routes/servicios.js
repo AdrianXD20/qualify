@@ -167,12 +167,11 @@ router.put('/:id', autenticar, actualizar);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 id: { type: integer, example: 12 }
- *                 aceptado_por_familiar: { type: boolean, example: true }
- *                 aceptado_por_cuidador: { type: boolean, example: true }
- *                 chat_habilitado: { type: boolean, example: true }
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Servicio'
+ *                 - type: object
+ *                   properties:
+ *                     chat_habilitado: { type: boolean, example: true }
  *       400:
  *         description: El servicio ya está cerrado
  *       403:

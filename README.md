@@ -113,8 +113,19 @@ Relaciones principales:
 - `GET /api/cuidadores` - Listar cuidadores
 - `POST /api/cuidadores` - Crear cuidador
 - `GET /api/cuidadores/mapa` - Cuidadores libres con ubicación aproximada (~200 m)
+- `GET /api/cuidadores/disponibles` - Cuidadores disponibles ahora con ficha pública
 - `PUT /api/cuidadores/:id/disponible` - Activar/desactivar disponibilidad
 - `PUT /api/cuidadores/:id/ubicacion` - Reportar ubicación mientras está disponible
+
+### Consultas privadas con cuidadores
+- `POST /api/consultas/cuidadores/:cuidador_id` - Iniciar o recuperar una conversación (solo familiar; el cuidador debe estar disponible)
+- `GET /api/consultas` - Listar las conversaciones propias
+- `GET /api/consultas/:id` - Ver participantes y mensajes sin leer
+- `GET /api/consultas/:id/mensajes?limite=50&antes_de_id=..` - Historial de mensajes
+- `POST /api/consultas/:id/mensajes` - Enviar mensaje (`{ "contenido": "..." }`)
+- `PUT /api/consultas/:id/mensajes/leidos` - Marcar mensajes recibidos como leídos
+
+> El chat de consulta es privado entre el familiar y el cuidador, funciona antes de contratar y no sustituye el chat asociado a un servicio. Las rutas de tiempo real usan Socket.io con `unirse_a_consulta_cuidadores`, `salir_de_consulta_cuidadores`, `mensaje_consulta_nuevo`, `mensajes_consulta_leidos` y `escribiendo_consulta_cuidadores`.
 
 ### Servicios
 - `GET /api/servicios` — Listar servicios
@@ -128,6 +139,8 @@ Relaciones principales:
 - `PUT /api/servicios/:id/mensajes/leidos` — Marcar como leídos
 
 > El familiar que crea la cita cuenta como aceptante. El chat se habilita cuando el cuidador llama a `PUT /api/servicios/:id/aceptar`. Solo las dos partes pueden leer y escribir; ni siquiera un admin accede al chat.
+
+> Para habilitar las consultas previas a contratar, ejecuta `db/migrations/004_consultas_cuidadores.sql` en el SQL Editor de Supabase.
 
 ### Ubicaciones (tiempo real)
 - `POST /api/ubicaciones/tiempo-real` - Enviar ubicación GPS

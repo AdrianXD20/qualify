@@ -7,6 +7,7 @@ const {
   actualizar,
   eliminar,
   mapa,
+  listarDisponibles,
   cambiarDisponible,
   reportarUbicacion,
 } = require('../controllers/cuidadoresController');
@@ -45,6 +46,8 @@ router.get('/', autenticar, listar);
  *                 properties:
  *                   cuidador_id: { type: integer, example: 3 }
  *                   nombre: { type: string, example: Ana López }
+ *                   titulo: { type: string, nullable: true, example: Geriatría }
+ *                   descripcion: { type: string, nullable: true }
  *                   especialidades: { type: string, example: Baño, alimentación }
  *                   tarifa_hora: { type: number, example: 150 }
  *                   anios_experiencia: { type: integer, example: 5 }
@@ -59,6 +62,46 @@ router.get('/', autenticar, listar);
  *                   actualizado_en: { type: string, format: date-time }
  */
 router.get('/mapa', autenticar, mapa);
+
+/**
+ * @swagger
+ * /api/cuidadores/disponibles:
+ *   get:
+ *     summary: Listar cuidadores disponibles ahora con su información pública
+ *     description: >
+ *       Devuelve perfiles verificados, marcados como disponibles, sin un
+ *       servicio activo y con ubicación actualizada en los últimos 2 minutos.
+ *       Incluye la información necesaria para consultar el perfil e iniciar
+ *       una conversación privada antes de contratar.
+ *     tags: [Cuidadores libres]
+ *     security: [{ bearerAuth: [] }]
+ *     responses:
+ *       200:
+ *         description: Lista de cuidadores disponibles; puede estar vacía
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   cuidador_id: { type: integer, example: 3 }
+ *                   nombre: { type: string, example: Ana López }
+ *                   titulo: { type: string, nullable: true, example: Geriatría }
+ *                   descripcion: { type: string, nullable: true }
+ *                   especialidades: { type: string, nullable: true, example: Baño, alimentación }
+ *                   tarifa_hora: { type: number, nullable: true, example: 150 }
+ *                   anios_experiencia: { type: integer, nullable: true, example: 5 }
+ *                   disponible: { type: boolean, example: true }
+ *                   latitud: { type: number, example: 20.967 }
+ *                   longitud: { type: number, example: -89.593 }
+ *                   precision_metros: { type: number, example: 200 }
+ *                   direccion_formateada: { type: string, nullable: true }
+ *                   actualizado_en: { type: string, format: date-time }
+ *       401:
+ *         description: Token ausente o inválido
+ */
+router.get('/disponibles', autenticar, listarDisponibles);
 
 /**
  * @swagger
@@ -146,7 +189,12 @@ router.get('/:id', autenticar, obtener);
  * /api/cuidadores:
  *   post:
  *     summary: Crear cuidador (registro público, no requiere token)
+ *     description: >
+ *       Registra el perfil vinculado a un usuario. Esta ruta es pública y
+ *       siempre guarda verificado como false; la verificación se completa
+ *       mediante el proceso de revisión administrativa.
  *     tags: [Cuidadores]
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -170,7 +218,7 @@ router.get('/:id', autenticar, obtener);
  *                 example: "GOPA900101ABC"
  *               verificado:
  *                 type: boolean
- *                 description: Solo un administrador puede establecerlo; el registro público lo fuerza a false
+ *                 description: Se ignora en esta ruta pública; el perfil siempre se crea como no verificado
  *                 example: false
  *               descripcion:
  *                 type: string

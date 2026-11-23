@@ -40,6 +40,7 @@ router.get('/:id', autenticar, obtener);
  *   post:
  *     summary: Crear usuario (registro público, no requiere token)
  *     tags: [Usuarios]
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:

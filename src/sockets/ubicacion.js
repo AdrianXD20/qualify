@@ -10,6 +10,7 @@
 
 const { verificarToken } = require('../middleware/auth');
 const { obtenerServicioParaChat, esParticipante, chatHabilitado } = require('../utils/chat');
+const { autorizarSala } = require('../controllers/consultasCuidadoresController');
 
 module.exports = function (io) {
   io.on('connection', (socket) => {
@@ -52,6 +53,54 @@ module.exports = function (io) {
     socket.on('salir_de_cuidadores_libres', () => {
       socket.leave('cuidadores_libres');
       console.log(`Socket ${socket.id} salió de cuidadores_libres`);
+    });
+
+    // Consultas privadas previas a contratar. El servidor valida participación
+    // antes de permitir que el socket entre a una sala de conversación.
+    socket.on('unirse_a_consulta_cuidadores', async (consultaId, ack) => {
+      const responder = (payload) => {
+        if (typeof ack === 'function') ack(payload);
+      };
+      const usuario = socket.data.usuario;
+      if (!usuario) return responder({ ok: false, error: 'Token requerido para el chat' });
+
+      try {
+        const acceso = await autorizarSala(usuario, consultaId);
+        if (acceso.error) return responder({ ok: false, error: acceso.error });
+
+        const sala = `consulta_cuidadores_${acceso.consulta_id}`;
+        socket.join(sala);
+        responder({ ok: true, consulta_id: acceso.consulta_id });
+      } catch (err) {
+        console.error('Error al unirse a consulta de cuidador:', err.message);
+        responder({ ok: false, error: 'No se pudo abrir la conversación' });
+      }
+    });
+
+    socket.on('salir_de_consulta_cuidadores', (consultaId) => {
+      const id = Number(consultaId);
+      if (Number.isInteger(id) && id > 0) {
+        socket.leave(`consulta_cuidadores_${id}`);
+      }
+    });
+
+    socket.on('escribiendo_consulta_cuidadores', (datos = {}) => {
+      const id = Number(datos.consulta_id);
+      const sala = `consulta_cuidadores_${id}`;
+      if (
+        !socket.data.usuario ||
+        !Number.isInteger(id) ||
+        id < 1 ||
+        !socket.rooms.has(sala)
+      ) {
+        return;
+      }
+
+      socket.to(sala).emit('escribiendo_consulta_cuidadores', {
+        consulta_id: id,
+        usuario_id: socket.data.usuario.id,
+        escribiendo: Boolean(datos.escribiendo),
+      });
     });
 
     // ------------------------------------------------------------
