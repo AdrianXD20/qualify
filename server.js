@@ -1,19 +1,62 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const http = require('http');
 const { Server } = require('socket.io');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const compression = require('compression');
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// Socket.io para tiempo real (tipo Life360)
+// ============================================
+// SEGURIDAD Y MIDDLEWARES GLOBALES
+// ============================================
+
+app.use(helmet());
+
+// Content Security Policy para permitir que Swagger se conecte a la API
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    connectSrc: [
+      "'self'",
+      'https://qualify-mo00.onrender.com',
+      'http://localhost:3000',
+    ],
+  },
+}));
+
+app.use(compression());
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+
+// Rate limiting general
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Demasiadas peticiones desde esta IP, inténtalo de nuevo más tarde' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// Rate limiting más estricto para rutas sensibles
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Demasiados intentos de autenticación, inténtalo más tarde' },
+});
+app.use('/api/usuarios', authLimiter);
+app.use('/api/verificacion', authLimiter);
+
+// ============================================
+// CORS: localhost y Render
+// ============================================
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
@@ -22,6 +65,23 @@ const allowedOrigins = [
   'https://qualify-mo00.onrender.com',
 ];
 
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+      return callback(null, true);
+    }
+    return callback(new Error('No permitido por CORS'), false);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
+// ============================================
+// SOCKET.IO PARA TIEMPO REAL
+// ============================================
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
@@ -35,19 +95,20 @@ const io = new Server(server, {
   },
 });
 
-// Configuración de Swagger
+// ============================================
+// SWAGGER (Render por defecto)
+// ============================================
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
       title: 'Qualify API',
       version: '1.0.0',
-      description: 'API REST para app de cuidado de adultos mayores (MVP tipo Life360 con Supabase + OpenStreetMap)',
-      contact: {
-        name: 'Qualify Team',
-      },
+      description: 'API REST para app de cuidado de adultos mayores (MVP tipo Life360)',
+      contact: { name: 'Qualify Team' },
     },
     servers: [
+      { url: 'https://qualify-mo00.onrender.com', description: 'Producción en Render' },
       { url: `http://localhost:${PORT}`, description: 'Servidor local de desarrollo' },
     ],
     components: {
@@ -66,48 +127,11 @@ const swaggerOptions = {
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
-
-// Middlewares
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
-      return callback(null, true);
-    }
-    return callback(new Error('No permitido por CORS'), false);
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-};
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(helmet());
-app.use(compression());
-
-// Rate limiting general: 100 peticiones por IP cada 15 minutos
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { error: 'Demasiadas peticiones desde esta IP, inténtalo de nuevo más tarde' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
-
-// Rate limiting más estricto para rutas sensibles (login, registro, subir documentos)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: 'Demasiados intentos de autenticación, inténtalo más tarde' },
-});
-app.use('/api/usuarios', authLimiter);
-app.use('/api/verificacion', authLimiter);
-
-// Documentación interactiva
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Rutas REST
+// ============================================
+// RUTAS REST
+// ============================================
 app.use('/api/usuarios', require('./src/routes/usuarios'));
 app.use('/api/abuelos', require('./src/routes/abuelos'));
 app.use('/api/cuidadores', require('./src/routes/cuidadores'));
@@ -118,7 +142,7 @@ app.use('/api/disponibilidad', require('./src/routes/disponibilidad'));
 app.use('/api/verificacion', require('./src/routes/verificacion'));
 app.use('/api/geocercas', require('./src/routes/geocercas'));
 
-// Health check para Render y monitoreo
+// Health check para Render
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -168,6 +192,7 @@ server.listen(PORT, () => {
   console.log(`\n=======================================`);
   console.log(` Servidor Qualify API: http://localhost:${PORT}`);
   console.log(` Swagger UI:           http://localhost:${PORT}/api-docs`);
+  console.log(` Health check:         http://localhost:${PORT}/health`);
   console.log(` Socket.io:            activo en puerto ${PORT}`);
   console.log(`=======================================\n`);
 });
