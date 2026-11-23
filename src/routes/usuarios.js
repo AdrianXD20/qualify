@@ -38,9 +38,8 @@ router.get('/:id', autenticar, obtener);
  * @swagger
  * /api/usuarios:
  *   post:
- *     summary: Crear usuario
+ *     summary: Crear usuario (registro público, no requiere token)
  *     tags: [Usuarios]
- *     security: [{ bearerAuth: [] }]
  *     requestBody:
  *       required: true
  *       content:
@@ -71,10 +70,8 @@ router.get('/:id', autenticar, obtener);
  *         description: Usuario creado correctamente
  *       400:
  *         description: Error de validación
- *       401:
- *         description: No autorizado
  */
-router.post('/', autenticar, crear);
+router.post('/', crear);
 
 /**
  * @swagger

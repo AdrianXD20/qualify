@@ -33,9 +33,8 @@ router.get('/:id', autenticar, obtener);
  * @swagger
  * /api/cuidadores:
  *   post:
- *     summary: Crear cuidador
+ *     summary: Crear cuidador (registro público, no requiere token)
  *     tags: [Cuidadores]
- *     security: [{ bearerAuth: [] }]
  *     requestBody:
  *       required: true
  *       content:
@@ -77,7 +76,7 @@ router.get('/:id', autenticar, obtener);
  *       400:
  *         description: Error de validación
  */
-router.post('/', autenticar, crear);
+router.post('/', crear);
 
 /**
  * @swagger
