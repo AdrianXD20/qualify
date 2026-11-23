@@ -35,8 +35,43 @@ const { autenticar } = require('../middleware/auth');
  *     responses:
  *       200:
  *         description: Sesión iniciada. Usar el `token` en el header Authorization de las demás rutas.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               required: [mensaje, token, usuario]
+ *               properties:
+ *                 mensaje:
+ *                   type: string
+ *                   example: Inicio de sesión exitoso
+ *                 token:
+ *                   type: string
+ *                   description: JWT con el ID, rol y correo del usuario. Expira en 1 hora.
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 usuario:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 5
+ *                     rol:
+ *                       type: string
+ *                       example: cuidador
+ *                     nombre:
+ *                       type: string
+ *                       example: María López
+ *                     correo:
+ *                       type: string
+ *                       format: email
+ *                       example: maria@email.com
+ *                     telefono:
+ *                       type: string
+ *                       nullable: true
+ *                       example: "9991234567"
  *       401:
  *         description: Credenciales incorrectas
+ *       400:
+ *         description: Correo y contraseña son requeridos
  */
 router.post('/login', login);
 
