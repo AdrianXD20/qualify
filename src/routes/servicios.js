@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const {
-  listar, obtener, crear, actualizar, eliminar,
+  listar, obtener, crear, actualizar, aceptar, eliminar,
 } = require('../controllers/serviciosController');
 const { autenticar } = require('../middleware/auth');
 
@@ -142,6 +142,45 @@ router.post('/', autenticar, crear);
  *         description: Servicio actualizado
  */
 router.put('/:id', autenticar, actualizar);
+
+/**
+ * @swagger
+ * /api/servicios/{id}/aceptar:
+ *   put:
+ *     summary: Aceptar una cita (familiar o cuidador)
+ *     description: >
+ *       El familiar que crea el servicio ya cuenta como aceptante. El cuidador
+ *       debe aceptar con este endpoint. Cuando ambas partes aceptaron se
+ *       habilita el chat del servicio. No se puede aceptar una cita cancelada
+ *       o completada.
+ *     tags: [Servicios]
+ *     security: [{ bearerAuth: [] }]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *         example: 12
+ *     responses:
+ *       200:
+ *         description: Cita aceptada. Devuelve también `chat_habilitado`.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id: { type: integer, example: 12 }
+ *                 aceptado_por_familiar: { type: boolean, example: true }
+ *                 aceptado_por_cuidador: { type: boolean, example: true }
+ *                 chat_habilitado: { type: boolean, example: true }
+ *       400:
+ *         description: El servicio ya está cerrado
+ *       403:
+ *         description: No participas en este servicio
+ *       404:
+ *         description: Servicio no encontrado
+ */
+router.put('/:id/aceptar', autenticar, aceptar);
 
 /**
  * @swagger

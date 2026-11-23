@@ -123,6 +123,11 @@ const swaggerOptions = {
           'Mapa en tiempo real de cuidadores disponibles: disponibilidad, ubicación aproximada (~200 m) y listado de libres',
       },
       { name: 'Servicios', description: 'Contratación y seguimiento de servicios' },
+      {
+        name: 'Chat',
+        description:
+          'Mensajes entre familiar y cuidador, habilitados solo cuando ambos aceptaron la cita',
+      },
       { name: 'Ubicaciones', description: 'Seguimiento GPS durante un servicio' },
       { name: 'Medicinas', description: 'Medicamentos por abuelo' },
       { name: 'Geocercas', description: 'Zonas seguras y alertas de salida' },
@@ -173,6 +178,7 @@ app.use('/api/abuelos', require('./src/routes/abuelos'));
 app.use('/api/cuidadores', require('./src/routes/cuidadores'));
 app.use('/api/medicinas', require('./src/routes/medicinas'));
 app.use('/api/servicios', require('./src/routes/servicios'));
+app.use('/api/servicios', require('./src/routes/chat'));
 app.use('/api/ubicaciones', require('./src/routes/ubicaciones'));
 app.use('/api/disponibilidad', require('./src/routes/disponibilidad'));
 app.use('/api/verificacion', require('./src/routes/verificacion'));

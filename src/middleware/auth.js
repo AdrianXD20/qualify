@@ -32,4 +32,10 @@ function soloAdmin(req, res, next) {
   next();
 }
 
-module.exports = { autenticar, soloAdmin };
+// Reutilizado por Socket.io para autenticar el handshake con el mismo JWT.
+function verificarToken(token) {
+  const decoded = jwt.verify(token, JWT_SECRET);
+  return { id: decoded.id, rol: decoded.rol, correo: decoded.correo };
+}
+
+module.exports = { autenticar, soloAdmin, verificarToken };

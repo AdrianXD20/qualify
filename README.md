@@ -86,6 +86,7 @@ Las principales tablas en Supabase (PostgreSQL):
 | `geocercas` | Zonas seguras (casa, centro de día, etc.) |
 | `alertas_ubicacion` | Notificaciones de salida de zona |
 | `verificaciones_cuidador` | Proceso de verificación de documentos |
+| `mensajes` | Chat familiar–cuidador por servicio (cita) |
 
 Relaciones principales:
 - `usuarios` 1:1 `cuidadores`
@@ -118,6 +119,15 @@ Relaciones principales:
 ### Servicios
 - `GET /api/servicios` — Listar servicios
 - `POST /api/servicios` — Crear servicio (requiere cuidador verificado)
+- `PUT /api/servicios/:id/aceptar` — Aceptar la cita (familiar o cuidador)
+
+### Chat (solo con la cita aceptada por ambas partes)
+- `GET /api/servicios/:id/chat` — Estado del chat, participantes y no leídos
+- `GET /api/servicios/:id/mensajes?limite=50&antes_de_id=..` — Historial
+- `POST /api/servicios/:id/mensajes` — Enviar mensaje (`{ "contenido": "..." }`)
+- `PUT /api/servicios/:id/mensajes/leidos` — Marcar como leídos
+
+> El familiar que crea la cita cuenta como aceptante. El chat se habilita cuando el cuidador llama a `PUT /api/servicios/:id/aceptar`. Solo las dos partes pueden leer y escribir; ni siquiera un admin accede al chat.
 
 ### Ubicaciones (tiempo real)
 - `POST /api/ubicaciones/tiempo-real` - Enviar ubicación GPS
@@ -128,6 +138,8 @@ Relaciones principales:
 - `ubicacion_actualizada` / `alerta_ubicacion` - Eventos de seguimiento en servicio
 - `unirse_a_cuidadores_libres` / `salir_de_cuidadores_libres` - Sala del mapa de libres
 - `ubicacion_cuidador_libre` / `cuidador_no_disponible` - Altas, movimiento y bajas del mapa
+- `unirse_a_chat` / `salir_de_chat` - Sala del chat de una cita (requiere JWT)
+- `mensaje_nuevo` / `mensajes_leidos` / `chat_habilitado` / `escribiendo` - Eventos del chat
 
 ### Verificación de identidad
 - `POST /api/verificacion/subir-documentos` — Subir INE y selfie

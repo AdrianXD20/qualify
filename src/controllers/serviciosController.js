@@ -8,6 +8,11 @@ const {
   soloCampos,
 } = require('../utils/acceso');
 const { marcarCuidadorOcupado } = require('../utils/geolocalizacion');
+const {
+  obtenerServicioParaChat,
+  chatHabilitado,
+  ESTADOS_CERRADOS,
+} = require('../utils/chat');
 
 async function listar(req, res) {
   const permitidos = await abuelosPermitidos(req.usuario);
@@ -61,13 +66,24 @@ async function crear(req, res) {
     return res.status(403).json({ error: 'El cuidador no está verificado para prestar servicios' });
   }
 
-  const { data, error: dbError } = await db
-    .from('servicios')
-    .insert([req.body])
-    .select()
-    .single();
+  const fila = {
+    ...req.body,
+    // Quien contrata la cita ya la aceptó; falta la aceptación del cuidador.
+    aceptado_por_familiar: true,
+    aceptado_familiar_en: new Date().toISOString(),
+    aceptado_por_cuidador: false,
+  };
+
+  let { data, error: dbError } = await db.from('servicios').insert([fila]).select().single();
+
+  // Si la migración 003 aún no está aplicada, la cita se crea igual y el chat
+  // simplemente queda deshabilitado (no rompemos la contratación).
+  if (dbError && /aceptado_por_/.test(dbError.message)) {
+    ({ data, error: dbError } = await db.from('servicios').insert([req.body]).select().single());
+  }
 
   if (dbError) return res.status(400).json({ error: dbError.message });
+  if (!data) return res.status(500).json({ error: 'No se pudo crear el servicio' });
 
   // Al confirmar una cita el cuidador deja de estar libre y desaparece del mapa.
   const estado = data.estado || 'activo';
@@ -116,6 +132,65 @@ async function actualizar(req, res) {
   res.json(data);
 }
 
+// PUT /api/servicios/:id/aceptar
+// El familiar ya aceptó al crear la cita; aquí el cuidador confirma.
+// Cuando ambas partes aceptaron se habilita el chat.
+async function aceptar(req, res) {
+  const contexto = await obtenerServicioParaChat(req.params.id);
+  if (!contexto) return res.status(404).json({ error: 'Servicio no encontrado' });
+
+  const { servicio, familiar_id, cuidador_usuario_id } = contexto;
+
+  if (ESTADOS_CERRADOS.includes(servicio.estado)) {
+    return res.status(400).json({ error: 'El servicio ya está cerrado' });
+  }
+
+  const esFamiliar = igual(familiar_id, req.usuario.id);
+  const esCuidador = igual(cuidador_usuario_id, req.usuario.id);
+
+  if (!esFamiliar && !esCuidador) {
+    return res.status(403).json({ error: 'No participas en este servicio' });
+  }
+
+  const cambios = {};
+  if (esFamiliar) {
+    cambios.aceptado_por_familiar = true;
+    cambios.aceptado_familiar_en = servicio.aceptado_familiar_en || new Date().toISOString();
+  }
+  if (esCuidador) {
+    cambios.aceptado_por_cuidador = true;
+    cambios.aceptado_cuidador_en = servicio.aceptado_cuidador_en || new Date().toISOString();
+  }
+
+  const { data, error } = await db
+    .from('servicios')
+    .update(cambios)
+    .eq('id', servicio.id)
+    .select()
+    .single();
+
+  if (error) {
+    if (/aceptado_por_|schema cache/i.test(error.message)) {
+      return res.status(503).json({
+        error: 'La aceptación de citas aún no está disponible: falta aplicar la migración 003 en Supabase',
+      });
+    }
+    return res.status(400).json({ error: error.message });
+  }
+
+  const habilitado = chatHabilitado(data);
+
+  const io = req.app.get('io');
+  if (io && habilitado) {
+    const aviso = { servicio_id: servicio.id, habilitado: true };
+    io.to(`usuario_${familiar_id}`).emit('chat_habilitado', aviso);
+    io.to(`usuario_${cuidador_usuario_id}`).emit('chat_habilitado', aviso);
+    io.to(`chat_servicio_${servicio.id}`).emit('chat_habilitado', aviso);
+  }
+
+  res.json({ ...data, chat_habilitado: habilitado });
+}
+
 async function eliminar(req, res) {
   const { data: servicio } = await db
     .from('servicios')
@@ -135,4 +210,4 @@ async function eliminar(req, res) {
   res.json({ mensaje: 'Servicio eliminado' });
 }
 
-module.exports = { listar, obtener, crear, actualizar, eliminar };
+module.exports = { listar, obtener, crear, actualizar, aceptar, eliminar };
