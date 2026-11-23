@@ -31,7 +31,7 @@ router.get('/', autenticar, listar);
  *       Devuelve únicamente cuidadores verificados que activaron "Estoy disponible",
  *       con una ubicación actualizada en los últimos 2 minutos y sin un servicio
  *       activo en este momento. Las coordenadas vienen redondeadas a ~200 m.
- *     tags: [Cuidadores]
+ *     tags: [Cuidadores libres]
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200:
@@ -63,7 +63,7 @@ router.get('/mapa', autenticar, mapa);
  *     description: >
  *       Solo el propio cuidador (o un admin) puede cambiarla. Al desactivarla
  *       se borra su ubicación pública y desaparece del mapa.
- *     tags: [Cuidadores]
+ *     tags: [Cuidadores libres]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
  *       - in: path
@@ -96,7 +96,7 @@ router.put('/:id/disponible', autenticar, cambiarDisponible);
  *       Requiere tener "disponible" activo y el perfil verificado. La ubicación
  *       se guarda redondeada a ~200 m y se emite por Socket.io al evento
  *       "ubicacion_cuidador_libre" en la sala "cuidadores_libres".
- *     tags: [Cuidadores]
+ *     tags: [Cuidadores libres]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
  *       - in: path
@@ -152,6 +152,7 @@ router.get('/:id', autenticar, obtener);
  *             properties:
  *               usuario_id:
  *                 type: integer
+ *                 description: ID del usuario registrado con rol "cuidador"
  *                 example: 5
  *               cedula:
  *                 type: string
@@ -164,6 +165,7 @@ router.get('/:id', autenticar, obtener);
  *                 example: "GOPA900101ABC"
  *               verificado:
  *                 type: boolean
+ *                 description: Solo un administrador puede establecerlo; el registro público lo fuerza a false
  *                 example: false
  *               descripcion:
  *                 type: string
@@ -190,12 +192,52 @@ router.post('/', crear);
  * /api/cuidadores/{id}:
  *   put:
  *     summary: Actualizar cuidador
+ *     description: >
+ *       Actualización parcial del propio perfil. El campo verificado solo lo
+ *       puede cambiar un administrador.
  *     tags: [Cuidadores]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cedula:
+ *                 type: string
+ *                 example: "12345678"
+ *               titulo:
+ *                 type: string
+ *                 example: Geriatría
+ *               rfc:
+ *                 type: string
+ *                 example: "GOPA900101ABC"
+ *               descripcion:
+ *                 type: string
+ *                 example: Cuidador con experiencia en adultos mayores
+ *               anios_experiencia:
+ *                 type: integer
+ *                 minimum: 0
+ *                 example: 5
+ *               tarifa_hora:
+ *                 type: number
+ *                 example: 150
+ *               especialidades:
+ *                 type: string
+ *                 example: Baño, alimentación, movilización
+ *               verificado:
+ *                 type: boolean
+ *                 description: Solo un administrador puede cambiarlo
+ *     responses:
+ *       200:
+ *         description: Cuidador actualizado
+ *       403:
+ *         description: No puedes modificar este cuidador
  */
 router.put('/:id', autenticar, actualizar);
 

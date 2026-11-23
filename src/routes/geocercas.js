@@ -81,6 +81,31 @@ router.post('/', autenticar, crear);
  *       - in: path
  *         name: id
  *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: Casa de abuelo
+ *               latitud:
+ *                 type: number
+ *                 example: 19.4326
+ *               longitud:
+ *                 type: number
+ *                 example: -99.1332
+ *               radio_metros:
+ *                 type: integer
+ *                 example: 100
+ *               activo:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Geocerca actualizada
  */
 router.put('/:id', autenticar, actualizar);
 

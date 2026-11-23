@@ -78,12 +78,41 @@ router.post('/', crear);
  * /api/usuarios/{id}:
  *   put:
  *     summary: Actualizar usuario
+ *     description: >
+ *       Actualización parcial: envía solo los campos a cambiar. El rol solo
+ *       puede modificarlo un administrador; la contraseña no se cambia aquí.
  *     tags: [Usuarios]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: María González
+ *               correo:
+ *                 type: string
+ *                 format: email
+ *                 example: maria@email.com
+ *               telefono:
+ *                 type: string
+ *                 example: "5512345678"
+ *               rol:
+ *                 type: string
+ *                 enum: [familiar, cuidador, admin]
+ *                 description: Solo un administrador puede cambiarlo
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado
+ *       403:
+ *         description: No puedes modificar otro usuario
  */
 router.put('/:id', autenticar, actualizar);
 

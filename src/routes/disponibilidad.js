@@ -78,6 +78,29 @@ router.post('/', autenticar, crear);
  *       - in: path
  *         name: id
  *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               dia_semana:
+ *                 type: integer
+ *                 enum: [0, 1, 2, 3, 4, 5, 6]
+ *                 description: "0 = domingo ... 6 = sábado"
+ *                 example: 1
+ *               hora_inicio:
+ *                 type: string
+ *                 pattern: "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+ *                 example: "08:00"
+ *               hora_fin:
+ *                 type: string
+ *                 pattern: "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+ *                 example: "14:00"
+ *     responses:
+ *       200:
+ *         description: Disponibilidad actualizada
  */
 router.put('/:id', autenticar, actualizar);
 

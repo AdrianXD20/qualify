@@ -34,6 +34,9 @@ router.get('/:id', autenticar, obtener);
  * /api/abuelos:
  *   post:
  *     summary: Registrar abuelo
+ *     description: >
+ *       El familiar_id se toma automáticamente del token; un familiar no puede
+ *       registrar abuelos a nombre de otra persona. Solo un admin puede enviarlo.
  *     tags: [Abuelos]
  *     security: [{ bearerAuth: [] }]
  *     requestBody:
@@ -42,10 +45,11 @@ router.get('/:id', autenticar, obtener);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [familiar_id, nombre]
+ *             required: [nombre]
  *             properties:
  *               familiar_id:
  *                 type: integer
+ *                 description: Opcional; se ignora para un familiar (se usa el del token)
  *                 example: 1
  *               nombre:
  *                 type: string
@@ -73,12 +77,40 @@ router.post('/', autenticar, crear);
  * /api/abuelos/{id}:
  *   put:
  *     summary: Actualizar abuelo
+ *     description: >
+ *       Actualización parcial. Solo el familiar dueño del abuelo (o un admin)
+ *       puede modificarlo. El familiar_id no se puede cambiar.
  *     tags: [Abuelos]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: Don Juan Pérez
+ *               nacimiento:
+ *                 type: string
+ *                 format: date
+ *                 example: "1945-05-20"
+ *               condiciones:
+ *                 type: string
+ *                 example: Diabetes, hipertensión
+ *               notas:
+ *                 type: string
+ *                 example: Le gusta caminar por las mañanas
+ *     responses:
+ *       200:
+ *         description: Abuelo actualizado
+ *       403:
+ *         description: No puedes modificar este abuelo
  */
 router.put('/:id', autenticar, actualizar);
 

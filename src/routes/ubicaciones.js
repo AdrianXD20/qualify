@@ -34,6 +34,9 @@ router.get('/:id', autenticar, obtener);
  * /api/ubicaciones:
  *   post:
  *     summary: Guardar ubicación (REST)
+ *     description: >
+ *       Debe incluir al menos abuelo_id o cuidador_id. Para el seguimiento
+ *       durante un servicio usa /api/ubicaciones/tiempo-real.
  *     tags: [Ubicaciones]
  *     security: [{ bearerAuth: [] }]
  *     requestBody:
@@ -67,7 +70,14 @@ router.get('/:id', autenticar, obtener);
  *                 example: 10
  *               bateria:
  *                 type: integer
+ *                 minimum: 0
+ *                 maximum: 100
  *                 example: 85
+ *               fecha:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Opcional; por defecto la fecha actual
+ *                 example: "2026-01-15T08:00:00Z"
  *     responses:
  *       201:
  *         description: Ubicación guardada
@@ -146,12 +156,49 @@ router.get('/ultima/:abuelo_id', autenticar, ultimaPorAbuelo);
  * /api/ubicaciones/{id}:
  *   put:
  *     summary: Actualizar ubicación
+ *     description: Solo se actualizan las coordenadas y datos de movimiento; no se puede cambiar el abuelo ni el cuidador.
  *     tags: [Ubicaciones]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               latitud:
+ *                 type: number
+ *                 minimum: -90
+ *                 maximum: 90
+ *                 example: 19.4326
+ *               longitud:
+ *                 type: number
+ *                 minimum: -180
+ *                 maximum: 180
+ *                 example: -99.1332
+ *               velocidad:
+ *                 type: number
+ *                 example: 12
+ *               direccion_grados:
+ *                 type: number
+ *                 minimum: 0
+ *                 maximum: 360
+ *                 example: 45
+ *               precision_metros:
+ *                 type: number
+ *                 example: 10
+ *               bateria:
+ *                 type: integer
+ *                 minimum: 0
+ *                 maximum: 100
+ *                 example: 85
+ *     responses:
+ *       200:
+ *         description: Ubicación actualizada
  */
 router.put('/:id', autenticar, actualizar);
 

@@ -93,12 +93,53 @@ router.post('/', autenticar, crear);
  * /api/servicios/{id}:
  *   put:
  *     summary: Actualizar servicio
+ *     description: >
+ *       Actualización parcial. Si el estado queda en "activo", el cuidador se
+ *       marca como ocupado y desaparece del mapa de cuidadores libres.
  *     tags: [Servicios]
  *     security: [{ bearerAuth: [] }]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nota:
+ *                 type: string
+ *                 example: Servicio de acompañamiento matutino
+ *               inicio:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-01-15T08:00:00Z"
+ *               fin:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-01-15T10:00:00Z"
+ *               tarifa_hora:
+ *                 type: number
+ *                 example: 150
+ *               total:
+ *                 type: number
+ *                 example: 300
+ *               comision:
+ *                 type: number
+ *                 example: 5
+ *               estado:
+ *                 type: string
+ *                 enum: [activo, completado, cancelado]
+ *                 example: activo
+ *               estado_pago:
+ *                 type: string
+ *                 enum: [pendiente, pagado, liquidado]
+ *                 example: pendiente
+ *     responses:
+ *       200:
+ *         description: Servicio actualizado
  */
 router.put('/:id', autenticar, actualizar);
 

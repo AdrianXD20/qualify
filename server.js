@@ -112,13 +112,53 @@ const swaggerOptions = {
         },
       },
     },
+    tags: [
+      { name: 'Autenticación', description: 'Registro, login y perfil de la sesión' },
+      { name: 'Usuarios', description: 'Cuentas de familiares y cuidadores' },
+      { name: 'Abuelos', description: 'Adultos mayores registrados por un familiar' },
+      { name: 'Cuidadores', description: 'Perfiles de cuidadores' },
+      {
+        name: 'Cuidadores libres',
+        description:
+          'Mapa en tiempo real de cuidadores disponibles: disponibilidad, ubicación aproximada (~200 m) y listado de libres',
+      },
+      { name: 'Servicios', description: 'Contratación y seguimiento de servicios' },
+      { name: 'Ubicaciones', description: 'Seguimiento GPS durante un servicio' },
+      { name: 'Medicinas', description: 'Medicamentos por abuelo' },
+      { name: 'Geocercas', description: 'Zonas seguras y alertas de salida' },
+      { name: 'Disponibilidad', description: 'Horarios semanales del cuidador' },
+      { name: 'Verificación', description: 'Validación manual de identidad' },
+    ],
     security: [{ bearerAuth: [] }],
   },
   apis: ['./src/routes/*.js'],
 };
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+// JSON del spec (útil para depurar qué versión está sirviendo Render)
+app.get('/api-docs.json', (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.json(swaggerDocs);
+});
+
+// Swagger UI sin caché: evita que el navegador muestre una versión vieja
+app.use(
+  '/api-docs',
+  (req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+  },
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocs, {
+    persistAuthorization: true,
+    filter: true,
+    docExpansion: 'list',
+    defaultModelsExpandDepth: -1,
+  })
+);
 
 // ============================================
 // RUTAS REST

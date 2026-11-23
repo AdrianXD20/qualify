@@ -75,6 +75,25 @@ router.post('/', autenticar, crear);
  *       - in: path
  *         name: id
  *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nombre:
+ *                 type: string
+ *                 example: Metformina
+ *               dosis:
+ *                 type: string
+ *                 example: "500 mg"
+ *               horario:
+ *                 type: string
+ *                 example: "8:00 AM y 8:00 PM"
+ *     responses:
+ *       200:
+ *         description: Medicina actualizada
  */
 router.put('/:id', autenticar, actualizar);
 
