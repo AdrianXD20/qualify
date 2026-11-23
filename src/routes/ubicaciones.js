@@ -36,6 +36,43 @@ router.get('/:id', autenticar, obtener);
  *     summary: Guardar ubicación (REST)
  *     tags: [Ubicaciones]
  *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [latitud, longitud]
+ *             properties:
+ *               abuelo_id:
+ *                 type: integer
+ *                 example: 1
+ *               cuidador_id:
+ *                 type: integer
+ *                 example: 3
+ *               latitud:
+ *                 type: number
+ *                 example: 19.4326
+ *               longitud:
+ *                 type: number
+ *                 example: -99.1332
+ *               velocidad:
+ *                 type: number
+ *                 example: 12
+ *               direccion_grados:
+ *                 type: number
+ *                 example: 45
+ *               precision_metros:
+ *                 type: number
+ *                 example: 10
+ *               bateria:
+ *                 type: integer
+ *                 example: 85
+ *     responses:
+ *       201:
+ *         description: Ubicación guardada
+ *       400:
+ *         description: Error de validación
  */
 router.post('/', autenticar, crear);
 
@@ -54,16 +91,35 @@ router.post('/', autenticar, crear);
  *             type: object
  *             required: [cuidador_id, abuelo_id, latitud, longitud]
  *             properties:
- *               cuidador_id: { type: integer }
- *               abuelo_id: { type: integer }
- *               latitud: { type: number }
- *               longitud: { type: number }
- *               velocidad: { type: number }
- *               direccion_grados: { type: number }
- *               precision_metros: { type: number }
- *               bateria: { type: integer }
+ *               cuidador_id:
+ *                 type: integer
+ *                 example: 3
+ *               abuelo_id:
+ *                 type: integer
+ *                 example: 1
+ *               latitud:
+ *                 type: number
+ *                 example: 19.4326
+ *               longitud:
+ *                 type: number
+ *                 example: -99.1332
+ *               velocidad:
+ *                 type: number
+ *                 example: 12
+ *               direccion_grados:
+ *                 type: number
+ *                 example: 45
+ *               precision_metros:
+ *                 type: number
+ *                 example: 10
+ *               bateria:
+ *                 type: integer
+ *                 example: 85
  *     responses:
- *       201: { description: Ubicación guardada y emitida por Socket.io }
+ *       201:
+ *         description: Ubicación guardada y emitida por Socket.io
+ *       400:
+ *         description: Error de validación
  */
 router.post('/tiempo-real', autenticar, (req, res) => {
   const io = req.app.get('io');

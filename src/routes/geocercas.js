@@ -36,6 +36,37 @@ router.get('/:id', autenticar, obtener);
  *     summary: Crear geocerca (zona segura tipo Life360)
  *     tags: [Geocercas]
  *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [abuelo_id, nombre, latitud, longitud]
+ *             properties:
+ *               abuelo_id:
+ *                 type: integer
+ *                 example: 1
+ *               nombre:
+ *                 type: string
+ *                 example: Casa de abuelo
+ *               latitud:
+ *                 type: number
+ *                 example: 19.4326
+ *               longitud:
+ *                 type: number
+ *                 example: -99.1332
+ *               radio_metros:
+ *                 type: integer
+ *                 example: 100
+ *               activo:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       201:
+ *         description: Geocerca creada
+ *       400:
+ *         description: Error de validación
  */
 router.post('/', autenticar, crear);
 

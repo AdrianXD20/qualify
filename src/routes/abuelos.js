@@ -36,6 +36,35 @@ router.get('/:id', autenticar, obtener);
  *     summary: Registrar abuelo
  *     tags: [Abuelos]
  *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [familiar_id, nombre]
+ *             properties:
+ *               familiar_id:
+ *                 type: integer
+ *                 example: 1
+ *               nombre:
+ *                 type: string
+ *                 example: Don Juan Pérez
+ *               nacimiento:
+ *                 type: string
+ *                 format: date
+ *                 example: "1945-05-20"
+ *               condiciones:
+ *                 type: string
+ *                 example: Diabetes, hipertensión
+ *               notas:
+ *                 type: string
+ *                 example: Le gusta caminar por las mañanas
+ *     responses:
+ *       201:
+ *         description: Abuelo registrado
+ *       400:
+ *         description: Error de validación
  */
 router.post('/', autenticar, crear);
 

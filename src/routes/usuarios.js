@@ -41,6 +41,38 @@ router.get('/:id', autenticar, obtener);
  *     summary: Crear usuario
  *     tags: [Usuarios]
  *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [rol, nombre, correo, password]
+ *             properties:
+ *               rol:
+ *                 type: string
+ *                 enum: [familiar, cuidador]
+ *                 example: familiar
+ *               nombre:
+ *                 type: string
+ *                 example: María González
+ *               correo:
+ *                 type: string
+ *                 example: maria@email.com
+ *               telefono:
+ *                 type: string
+ *                 example: "5512345678"
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: MiPass123
+ *     responses:
+ *       201:
+ *         description: Usuario creado correctamente
+ *       400:
+ *         description: Error de validación
+ *       401:
+ *         description: No autorizado
  */
 router.post('/', autenticar, crear);
 

@@ -36,6 +36,55 @@ router.get('/:id', autenticar, obtener);
  *     summary: Crear servicio (requiere cuidador verificado)
  *     tags: [Servicios]
  *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [abuelo_id, cuidador_id]
+ *             properties:
+ *               abuelo_id:
+ *                 type: integer
+ *                 example: 1
+ *               cuidador_id:
+ *                 type: integer
+ *                 example: 3
+ *               nota:
+ *                 type: string
+ *                 example: Servicio de acompañamiento matutino
+ *               inicio:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-01-15T08:00:00Z"
+ *               fin:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-01-15T10:00:00Z"
+ *               tarifa_hora:
+ *                 type: number
+ *                 example: 150
+ *               total:
+ *                 type: number
+ *                 example: 300
+ *               comision:
+ *                 type: number
+ *                 example: 5
+ *               estado:
+ *                 type: string
+ *                 enum: [activo, completado, cancelado]
+ *                 example: activo
+ *               estado_pago:
+ *                 type: string
+ *                 enum: [pendiente, pagado, liquidado]
+ *                 example: pendiente
+ *     responses:
+ *       201:
+ *         description: Servicio creado
+ *       400:
+ *         description: Error de validación
+ *       403:
+ *         description: Cuidador no verificado
  */
 router.post('/', autenticar, crear);
 

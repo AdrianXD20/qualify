@@ -36,6 +36,34 @@ router.get('/:id', autenticar, obtener);
  *     summary: Crear disponibilidad
  *     tags: [Disponibilidad]
  *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [cuidador_id, dia_semana, hora_inicio, hora_fin]
+ *             properties:
+ *               cuidador_id:
+ *                 type: integer
+ *                 example: 3
+ *               dia_semana:
+ *                 type: integer
+ *                 enum: [0, 1, 2, 3, 4, 5, 6]
+ *                 example: 1
+ *               hora_inicio:
+ *                 type: string
+ *                 pattern: "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+ *                 example: "08:00"
+ *               hora_fin:
+ *                 type: string
+ *                 pattern: "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+ *                 example: "14:00"
+ *     responses:
+ *       201:
+ *         description: Disponibilidad creada
+ *       400:
+ *         description: Error de validación
  */
 router.post('/', autenticar, crear);
 
