@@ -1,4 +1,6 @@
-const { supabase } = require('../config/supabase');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'qualify-secret-key-cambiar-en-produccion';
 
 async function autenticar(req, res, next) {
   try {
@@ -10,16 +12,16 @@ async function autenticar(req, res, next) {
 
     const token = authHeader.split(' ')[1];
 
-    const { data, error } = await supabase.auth.getUser(token);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.usuario = {
+      id: decoded.id,
+      rol: decoded.rol,
+      correo: decoded.correo,
+    };
 
-    if (error || !data.user) {
-      return res.status(401).json({ error: 'Token inválido o expirado' });
-    }
-
-    req.usuario = data.user;
     next();
   } catch (err) {
-    res.status(500).json({ error: 'Error al verificar autenticación' });
+    return res.status(401).json({ error: 'Token inválido o expirado' });
   }
 }
 

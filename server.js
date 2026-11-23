@@ -141,6 +141,7 @@ app.use('/api/ubicaciones', require('./src/routes/ubicaciones'));
 app.use('/api/disponibilidad', require('./src/routes/disponibilidad'));
 app.use('/api/verificacion', require('./src/routes/verificacion'));
 app.use('/api/geocercas', require('./src/routes/geocercas'));
+app.use('/api/auth', require('./src/routes/auth'));
 
 // Health check para Render
 app.get('/health', (req, res) => {
