@@ -35,25 +35,15 @@ app.use(compression());
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
-// Rate limiting general
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { error: 'Demasiadas peticiones desde esta IP, inténtalo de nuevo más tarde' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
-
-// Rate limiting más estricto solo para rutas de autenticación
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: 'Demasiados intentos de autenticación, inténtalo más tarde' },
-});
-// Solo aplicar a registro y login — NO a toda la API
-app.use('/api/auth/login', authLimiter);
-app.use('/api/usuarios', authLimiter);
+// ============================================
+// TEMPORALMENTE SIN RATE LIMITING (para pruebas)
+// TODO: Agregar de nuevo antes de producción
+// ============================================
+// const limiter = rateLimit({...});
+// app.use(limiter);
+// const authLimiter = rateLimit({...});
+// app.use('/api/auth/login', authLimiter);
+// app.use('/api/usuarios', authLimiter);
 
 // ============================================
 // CORS: localhost y Render
