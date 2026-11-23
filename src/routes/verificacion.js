@@ -6,7 +6,7 @@ const {
   revisar,
   listarPendientes,
 } = require('../controllers/verificacionController');
-const { autenticar } = require('../middleware/auth');
+const { autenticar, soloAdmin } = require('../middleware/auth');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -76,7 +76,7 @@ router.post('/subir-documentos', autenticar, upload.fields([
  *       400:
  *         description: Error de validación
  */
-router.post('/revisar', autenticar, revisar);
+router.post('/revisar', autenticar, soloAdmin, revisar);
 
 /**
  * @swagger
@@ -86,6 +86,6 @@ router.post('/revisar', autenticar, revisar);
  *     tags: [Verificación]
  *     security: [{ bearerAuth: [] }]
  */
-router.get('/pendientes', autenticar, listarPendientes);
+router.get('/pendientes', autenticar, soloAdmin, listarPendientes);
 
 module.exports = router;

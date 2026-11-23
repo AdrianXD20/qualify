@@ -1,4 +1,4 @@
-const { supabase } = require('../config/supabase');
+const { db } = require('../config/supabase');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -14,7 +14,7 @@ async function login(req, res) {
     }
 
     // Buscar usuario por correo
-    const { data: usuario, error } = await supabase
+    const { data: usuario, error } = await db
       .from('usuarios')
       .select('id, rol, nombre, correo, password, telefono')
       .eq('correo', correo)
@@ -52,7 +52,7 @@ async function login(req, res) {
 
 async function me(req, res) {
   try {
-    const { data: usuario, error } = await supabase
+    const { data: usuario, error } = await db
       .from('usuarios')
       .select('id, rol, nombre, correo, telefono, creado_en')
       .eq('id', req.usuario.id)

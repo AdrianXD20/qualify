@@ -26,7 +26,7 @@ API REST para el MVP de **Qualify**, una aplicación de cuidado de adultos mayor
 
 Qualify es una plataforma para conectar familias con cuidadores de adultos mayores. Esta API gestiona:
 
-- **Usuarios** (familiares y cuidadores con autenticación Supabase)
+- **Usuarios** (familiares y cuidadores con autenticación JWT y contraseñas con bcrypt)
 - **Abuelos** registrados por sus familiares
 - **Medicinas** por abuelo
 - **Servicios** de cuidado con control de pagos y comisiones
@@ -45,7 +45,7 @@ Desarrollado como MVP con arquitectura **MVC** y listo para desplegar en la nube
 |------------|-----|
 | [Node.js](https://nodejs.org/) | Runtime del servidor |
 | [Express](https://expressjs.com/) | Framework web |
-| [Supabase](https://supabase.com/) | Base de datos PostgreSQL + Auth + Storage |
+| [Supabase](https://supabase.com/) | Base de datos PostgreSQL + Storage |
 | [Socket.io](https://socket.io/) | Tiempo real (ubicaciones) |
 | [Swagger UI](https://swagger.io/tools/swagger-ui/) | Documentación interactiva de la API |
 | [Joi](https://joi.dev/) | Validación de datos de entrada |
@@ -129,7 +129,9 @@ Relaciones principales:
 - `GET /api/geocercas` — Listar zonas seguras
 - `POST /api/geocercas` — Crear geocerca
 
-Todos los endpoints requieren autenticación mediante **Bearer Token** de Supabase Auth, excepto los definidos como públicos.
+Todos los endpoints requieren autenticación mediante **Bearer Token** JWT (obtenido en `POST /api/auth/login`), excepto el registro y el login, que son públicos.
+
+El backend usa la **service role key** de Supabase, por lo que el control de acceso se valida en el middleware de JWT y en cada controlador: un familiar solo accede a sus abuelos y un cuidador solo a los abuelos con servicios asignados.
 
 ---
 
@@ -143,7 +145,10 @@ PORT=3000
 # Supabase
 SUPABASE_URL=https://tu-proyecto.supabase.co
 SUPABASE_ANON_KEY=tu-anon-key
-SUPABASE_SERVICE_ROL_KEY=tu-service-rol-key
+SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
+
+# JWT
+JWT_SECRET=cambia-esta-clave-en-produccion
 
 # Socket.io CORS
 SOCKET_CORS_ORIGIN=http://localhost:5173

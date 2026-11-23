@@ -18,7 +18,7 @@ async function subirDocumentos(req, res) {
     const rutaSelfie = `cuidadores/${cuidador_id}/selfie_${Date.now()}.jpg`;
 
     if (!supabaseAdmin) {
-      return res.status(500).json({ error: 'SUPABASE_SERVICE_ROL_KEY no configurada' });
+      return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY no configurada' });
     }
 
     await supabaseAdmin.storage.from('documentos-cuidadores').upload(rutaINE, archivo_ine.buffer);
