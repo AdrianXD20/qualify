@@ -62,6 +62,28 @@ router.get('/:id', autenticar, obtener);
  *               activo:
  *                 type: boolean
  *                 example: true
+ *               calle_numero:
+ *                 type: string
+ *                 example: Calle 60 123
+ *               colonia:
+ *                 type: string
+ *                 example: Centro
+ *               codigo_postal:
+ *                 type: string
+ *                 example: "97000"
+ *               ciudad:
+ *                 type: string
+ *                 example: Mérida
+ *               estado:
+ *                 type: string
+ *                 example: Yucatán
+ *               pais:
+ *                 type: string
+ *                 example: México
+ *               direccion_formateada:
+ *                 type: string
+ *                 description: Se puede obtener con GET /api/geocodificacion/buscar
+ *                 example: Calle 60, Centro, Mérida, Yucatán, 97000, México
  *     responses:
  *       201:
  *         description: Geocerca creada
@@ -103,6 +125,27 @@ router.post('/', autenticar, crear);
  *               activo:
  *                 type: boolean
  *                 example: true
+ *               calle_numero:
+ *                 type: string
+ *                 example: Calle 60 123
+ *               colonia:
+ *                 type: string
+ *                 example: Centro
+ *               codigo_postal:
+ *                 type: string
+ *                 example: "97000"
+ *               ciudad:
+ *                 type: string
+ *                 example: Mérida
+ *               estado:
+ *                 type: string
+ *                 example: Yucatán
+ *               pais:
+ *                 type: string
+ *                 example: México
+ *               direccion_formateada:
+ *                 type: string
+ *                 example: Calle 60, Centro, Mérida, Yucatán, 97000, México
  *     responses:
  *       200:
  *         description: Geocerca actualizada

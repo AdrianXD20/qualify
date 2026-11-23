@@ -1,5 +1,6 @@
 const { db } = require('../config/supabase');
 const { esquemaUbicacion, esquemaTiempoReal } = require('../models/Ubicacion');
+const { geocodificarInversa } = require('../services/geocodificacion');
 const {
   abuelosPermitidos,
   permiteAbuelo,
@@ -237,7 +238,17 @@ async function ultimaPorAbuelo(req, res) {
 
   if (error) return res.status(500).json({ error: error.message });
   if (!data || data.length === 0) return res.status(404).json({ error: 'Sin ubicaciones registradas' });
-  res.json(data[0]);
+
+  const punto = data[0];
+  let direccion_formateada = null;
+  try {
+    const direccion = await geocodificarInversa(punto.latitud, punto.longitud);
+    direccion_formateada = direccion ? direccion.direccion_formateada : null;
+  } catch (err) {
+    console.warn('No se pudo geocodificar la última ubicación:', err.message);
+  }
+
+  res.json({ ...punto, direccion_formateada });
 }
 
 module.exports = { listar, obtener, crear, tiempoReal, actualizar, eliminar, ultimaPorAbuelo };

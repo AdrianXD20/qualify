@@ -51,6 +51,11 @@ router.get('/', autenticar, listar);
  *                   latitud: { type: number, example: 19.432 }
  *                   longitud: { type: number, example: -99.133 }
  *                   precision_metros: { type: integer, example: 200 }
+ *                   direccion_formateada:
+ *                     type: string
+ *                     nullable: true
+ *                     description: Dirección aproximada; puede ser null mientras el backend la resuelve
+ *                     example: Calle 60, Centro, Mérida, Yucatán, 97000, México
  *                   actualizado_en: { type: string, format: date-time }
  */
 router.get('/mapa', autenticar, mapa);

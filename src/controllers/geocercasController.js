@@ -63,7 +63,20 @@ async function actualizar(req, res) {
     return res.status(403).json({ error: 'No tienes acceso a esta geocerca' });
   }
 
-  const cambios = soloCampos(req.body, ['nombre', 'latitud', 'longitud', 'radio_metros', 'activo']);
+  const cambios = soloCampos(req.body, [
+    'nombre',
+    'latitud',
+    'longitud',
+    'radio_metros',
+    'activo',
+    'calle_numero',
+    'colonia',
+    'codigo_postal',
+    'ciudad',
+    'estado',
+    'pais',
+    'direccion_formateada',
+  ]);
   if (Object.keys(cambios).length === 0) {
     return res.status(400).json({ error: 'No hay campos válidos para actualizar' });
   }

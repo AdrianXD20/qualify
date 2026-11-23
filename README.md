@@ -135,8 +135,15 @@ Relaciones principales:
 - `GET /api/verificacion/pendientes` — Ver solicitudes pendientes
 
 ### Geocercas
-- `GET /api/geocercas` — Listar zonas seguras
-- `POST /api/geocercas` — Crear geocerca
+- `GET /api/geocercas` - Listar zonas seguras
+- `POST /api/geocercas` - Crear geocerca (acepta dirección por partes y `direccion_formateada`)
+- `PUT /api/geocercas/:id` - Actualizar zona segura o su dirección
+
+### Geocodificación (OpenStreetMap/Nominatim)
+- `GET /api/geocodificacion/reversa?latitud=..&longitud=..` - Coordenadas → dirección
+- `GET /api/geocodificacion/buscar?calle_numero=..&colonia=..&codigo_postal=..&ciudad=..&estado=..` - Dirección → coordenadas
+
+> La dirección de las ubicaciones en vivo se resuelve con el mismo servicio, se cachea 24 h y se respeta el límite de 1 petición por segundo de Nominatim.
 
 Todos los endpoints requieren autenticación mediante **Bearer Token** JWT (obtenido en `POST /api/auth/login`), excepto el registro y el login, que son públicos.
 

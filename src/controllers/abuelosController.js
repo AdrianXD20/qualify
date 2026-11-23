@@ -98,6 +98,14 @@ async function eliminar(req, res) {
     return res.status(403).json({ error: 'No puedes eliminar este abuelo' });
   }
 
+  // La FK de ubicaciones usa ON DELETE SET NULL y su check exige abuelo o
+  // cuidador, así que hay que borrar primero las filas dependientes.
+  await db.from('alertas_ubicacion').delete().eq('abuelo_id', req.params.id);
+  await db.from('ubicaciones').delete().eq('abuelo_id', req.params.id);
+  await db.from('geocercas').delete().eq('abuelo_id', req.params.id);
+  await db.from('medicinas').delete().eq('abuelo_id', req.params.id);
+  await db.from('servicios').delete().eq('abuelo_id', req.params.id);
+
   const { error } = await db.from('abuelos').delete().eq('id', req.params.id);
   if (error) return res.status(400).json({ error: error.message });
   res.json({ mensaje: 'Abuelo eliminado' });

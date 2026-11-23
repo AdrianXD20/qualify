@@ -126,6 +126,11 @@ const swaggerOptions = {
       { name: 'Ubicaciones', description: 'Seguimiento GPS durante un servicio' },
       { name: 'Medicinas', description: 'Medicamentos por abuelo' },
       { name: 'Geocercas', description: 'Zonas seguras y alertas de salida' },
+      {
+        name: 'Geocodificación',
+        description:
+          'Dirección a partir de coordenadas y coordenadas a partir de una dirección (OpenStreetMap/Nominatim)',
+      },
       { name: 'Disponibilidad', description: 'Horarios semanales del cuidador' },
       { name: 'Verificación', description: 'Validación manual de identidad' },
     ],
@@ -172,6 +177,7 @@ app.use('/api/ubicaciones', require('./src/routes/ubicaciones'));
 app.use('/api/disponibilidad', require('./src/routes/disponibilidad'));
 app.use('/api/verificacion', require('./src/routes/verificacion'));
 app.use('/api/geocercas', require('./src/routes/geocercas'));
+app.use('/api/geocodificacion', require('./src/routes/geocodificacion'));
 app.use('/api/auth', require('./src/routes/auth'));
 
 // Health check para Render

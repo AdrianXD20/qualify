@@ -142,6 +142,9 @@ router.post('/tiempo-real', autenticar, (req, res) => {
  * /api/ubicaciones/ultima/{abuelo_id}:
  *   get:
  *     summary: Última ubicación conocida de un abuelo
+ *     description: >
+ *       Incluye direccion_formateada, obtenida con el mismo geocodificador que
+ *       usan las geocercas y el mapa de cuidadores libres (cacheada 24 h).
  *     tags: [Ubicaciones]
  *     security: [{ bearerAuth: [] }]
  *     parameters:

@@ -1,7 +1,7 @@
 const { db } = require('../config/supabase');
 const { esquemaCuidador } = require('../models/Cuidador');
 const { esAdmin, igual, soloCampos } = require('../utils/acceso');
-const { redondearCoordenadas } = require('../utils/geolocalizacion');
+const { redondearCoordenadas, refrescarDireccionLibre } = require('../utils/geolocalizacion');
 
 // Una ubicación deja de mostrarse si el cuidador no la actualiza en 2 minutos.
 const MAX_ANTIGUEDAD_MS = 2 * 60 * 1000;
@@ -111,7 +111,7 @@ async function mapa(req, res) {
     const [{ data: ubicaciones }, { data: servicios }] = await Promise.all([
       db
         .from('ubicaciones_libres')
-        .select('cuidador_id, latitud, longitud, actualizado_en')
+        .select('*')
         .in('cuidador_id', ids),
       db
         .from('servicios')
@@ -168,6 +168,7 @@ async function mapa(req, res) {
         latitud,
         longitud,
         precision_metros,
+        direccion_formateada: ubicacion.direccion_formateada || null,
         actualizado_en: ubicacion.actualizado_en,
       };
     });
@@ -282,6 +283,9 @@ async function reportarUbicacion(req, res) {
   );
 
   if (error) return res.status(400).json({ error: error.message });
+
+  // La dirección se resuelve en segundo plano (máximo cada 5 min).
+  refrescarDireccionLibre(Number(req.params.id), aproximada.latitud, aproximada.longitud);
 
   const io = req.app.get('io');
   if (io) {
