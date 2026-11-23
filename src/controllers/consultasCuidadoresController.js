@@ -215,6 +215,34 @@ async function abrir(req, res) {
   }
 
   try {
+    const { data: consultaExistente, error: consultaExistenteError } = await db
+      .from('consultas_cuidadores')
+      .select('id')
+      .eq('familiar_id', req.usuario.id)
+      .eq('cuidador_id', cuidadorId)
+      .limit(1)
+      .maybeSingle();
+
+    if (consultaExistenteError) {
+      if (/consultas_cuidadores|schema cache/i.test(consultaExistenteError.message)) {
+        return res.status(503).json({ error: ERROR_MIGRACION });
+      }
+      throw consultaExistenteError;
+    }
+
+    if (consultaExistente) {
+      const contexto = await cargarContexto(consultaExistente.id);
+      if (!contexto) return res.status(404).json({ error: 'Consulta no encontrada' });
+
+      return res.status(200).json({
+        consulta_id: contexto.consulta.id,
+        creado_en: contexto.consulta.creado_en,
+        actualizado_en: contexto.consulta.actualizado_en,
+        familiar: contexto.familiar,
+        cuidador: contexto.cuidador,
+      });
+    }
+
     const disponibles = await obtenerCuidadoresDisponibles();
     if (!disponibles.some((cuidador) => igual(cuidador.cuidador_id, cuidadorId))) {
       return res.status(409).json({

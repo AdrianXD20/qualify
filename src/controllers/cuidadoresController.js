@@ -328,6 +328,7 @@ async function reportarUbicacion(req, res) {
 }
 
 module.exports = {
+  obtenerCuidadoresDisponibles,
   listar,
   obtener,
   crear,

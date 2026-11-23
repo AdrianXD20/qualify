@@ -33,3 +33,6 @@ CREATE INDEX IF NOT EXISTS idx_mensajes_consulta
 
 ALTER TABLE consultas_cuidadores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mensajes_consulta ENABLE ROW LEVEL SECURITY;
+
+-- Sin políticas públicas: el backend autentica al usuario con JWT y usa
+-- SUPABASE_SERVICE_ROLE_KEY. Ningún cliente externo accede directamente a las tablas.
