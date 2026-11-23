@@ -5,15 +5,32 @@ const http = require('http');
 const { Server } = require('socket.io');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // Socket.io para tiempo real (tipo Life360)
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:8080',
+  'https://qualify-mo00.onrender.com',
+];
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.SOCKET_CORS_ORIGIN || '*',
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+        return callback(null, true);
+      }
+      return callback(new Error('No permitido por CORS'), false);
+    },
     methods: ['GET', 'POST'],
   },
 });
@@ -51,8 +68,41 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
 // Middlewares
-app.use(cors());
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+      return callback(null, true);
+    }
+    return callback(new Error('No permitido por CORS'), false);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(helmet());
+app.use(compression());
+
+// Rate limiting general: 100 peticiones por IP cada 15 minutos
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Demasiadas peticiones desde esta IP, inténtalo de nuevo más tarde' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// Rate limiting más estricto para rutas sensibles (login, registro, subir documentos)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Demasiados intentos de autenticación, inténtalo más tarde' },
+});
+app.use('/api/usuarios', authLimiter);
+app.use('/api/verificacion', authLimiter);
 
 // Documentación interactiva
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
@@ -67,6 +117,16 @@ app.use('/api/ubicaciones', require('./src/routes/ubicaciones'));
 app.use('/api/disponibilidad', require('./src/routes/disponibilidad'));
 app.use('/api/verificacion', require('./src/routes/verificacion'));
 app.use('/api/geocercas', require('./src/routes/geocercas'));
+
+// Health check para Render y monitoreo
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+  });
+});
 
 // Root
 app.get('/', (req, res) => {
