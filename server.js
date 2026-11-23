@@ -144,6 +144,26 @@ app.set('io', io);
 // Sockets de ubicación en tiempo real
 require('./src/sockets/ubicacion')(io);
 
+// Ruta 404 para endpoints inexistentes
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint no encontrado' });
+});
+
+// Manejo global de errores (no filtrar stack traces en producción)
+app.use((err, req, res, next) => {
+  console.error('Error no manejado:', err);
+
+  const status = err.status || 500;
+  const message = process.env.NODE_ENV === 'production'
+    ? 'Error interno del servidor'
+    : err.message || 'Error interno del servidor';
+
+  res.status(status).json({
+    error: message,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
+  });
+});
+
 server.listen(PORT, () => {
   console.log(`\n=======================================`);
   console.log(` Servidor Qualify API: http://localhost:${PORT}`);
