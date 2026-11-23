@@ -5,10 +5,18 @@ const { autenticar } = require('../middleware/auth');
 
 /**
  * @swagger
+ * tags:
+ *   name: Autenticación
+ *   description: Inicio de sesión y perfil del usuario autenticado
+ */
+
+/**
+ * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Iniciar sesión (obtener token)
+ *     summary: Iniciar sesión (obtener token JWT)
  *     tags: [Autenticación]
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -26,7 +34,7 @@ const { autenticar } = require('../middleware/auth');
  *                 example: MiPass123
  *     responses:
  *       200:
- *         description: Sesión iniciada correctamente
+ *         description: Sesión iniciada. Usar el `token` en el header Authorization de las demás rutas.
  *       401:
  *         description: Credenciales incorrectas
  */
@@ -41,7 +49,7 @@ router.post('/login', login);
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200:
- *         description: Datos del usuario
+ *         description: Datos del usuario autenticado
  *       401:
  *         description: No autorizado
  */

@@ -45,14 +45,15 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Rate limiting más estricto para rutas sensibles
+// Rate limiting más estricto solo para rutas de autenticación
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: 'Demasiados intentos de autenticación, inténtalo más tarde' },
 });
+// Solo aplicar a registro y login — NO a toda la API
+app.use('/api/auth/login', authLimiter);
 app.use('/api/usuarios', authLimiter);
-app.use('/api/verificacion', authLimiter);
 
 // ============================================
 // CORS: localhost y Render
@@ -117,7 +118,7 @@ const swaggerOptions = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'Token de Supabase Auth (Bearer <token>)',
+          description: 'Token JWT generado por POST /api/auth/login (Bearer <token>)',
         },
       },
     },
@@ -195,5 +196,11 @@ server.listen(PORT, () => {
   console.log(` Swagger UI:           http://localhost:${PORT}/api-docs`);
   console.log(` Health check:         http://localhost:${PORT}/health`);
   console.log(` Socket.io:            activo en puerto ${PORT}`);
+  if (!process.env.JWT_SECRET) {
+    console.warn('\n⚠️  ADVERTENCIA: JWT_SECRET no está definido como variable de entorno.');
+    console.warn('   Usando clave por defecto — INSEGURO para producción.');
+    console.warn('   Agregar JWT_SECRET en Render → Environment Variables.\n');
+  }
   console.log(`=======================================\n`);
 });
+
