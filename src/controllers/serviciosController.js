@@ -7,6 +7,7 @@ const {
   permiteAbuelo,
   soloCampos,
 } = require('../utils/acceso');
+const { marcarCuidadorOcupado } = require('../utils/geolocalizacion');
 
 async function listar(req, res) {
   const permitidos = await abuelosPermitidos(req.usuario);
@@ -67,6 +68,13 @@ async function crear(req, res) {
     .single();
 
   if (dbError) return res.status(400).json({ error: dbError.message });
+
+  // Al confirmar una cita el cuidador deja de estar libre y desaparece del mapa.
+  const estado = data.estado || 'activo';
+  if (estado !== 'cancelado' && estado !== 'completado') {
+    await marcarCuidadorOcupado(data.cuidador_id, req.app.get('io'));
+  }
+
   res.status(201).json(data);
 }
 
@@ -99,6 +107,12 @@ async function actualizar(req, res) {
     .single();
 
   if (error) return res.status(400).json({ error: error.message });
+
+  // Si la cita queda activa, el cuidador deja de aparecer como libre.
+  if (data.estado === 'activo') {
+    await marcarCuidadorOcupado(data.cuidador_id, req.app.get('io'));
+  }
+
   res.json(data);
 }
 

@@ -109,16 +109,25 @@ Relaciones principales:
 - `POST /api/abuelos` — Registrar abuelo
 
 ### Cuidadores
-- `GET /api/cuidadores` — Listar cuidadores
-- `POST /api/cuidadores` — Crear cuidador
+- `GET /api/cuidadores` - Listar cuidadores
+- `POST /api/cuidadores` - Crear cuidador
+- `GET /api/cuidadores/mapa` - Cuidadores libres con ubicación aproximada (~200 m)
+- `PUT /api/cuidadores/:id/disponible` - Activar/desactivar disponibilidad
+- `PUT /api/cuidadores/:id/ubicacion` - Reportar ubicación mientras está disponible
 
 ### Servicios
 - `GET /api/servicios` — Listar servicios
 - `POST /api/servicios` — Crear servicio (requiere cuidador verificado)
 
 ### Ubicaciones (tiempo real)
-- `POST /api/ubicaciones/tiempo-real` — Enviar ubicación GPS
-- `GET /api/ubicaciones/ultima/:abuelo_id` — Última ubicación conocida
+- `POST /api/ubicaciones/tiempo-real` - Enviar ubicación GPS
+- `GET /api/ubicaciones/ultima/:abuelo_id` - Última ubicación conocida
+
+### Socket.io
+- `unirse_a_abuelo` / `salir_de_abuelo` - Sala por abuelo (`abuelo_<id>`)
+- `ubicacion_actualizada` / `alerta_ubicacion` - Eventos de seguimiento en servicio
+- `unirse_a_cuidadores_libres` / `salir_de_cuidadores_libres` - Sala del mapa de libres
+- `ubicacion_cuidador_libre` / `cuidador_no_disponible` - Altas, movimiento y bajas del mapa
 
 ### Verificación de identidad
 - `POST /api/verificacion/subir-documentos` — Subir INE y selfie

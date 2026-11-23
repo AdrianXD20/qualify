@@ -20,6 +20,17 @@ module.exports = function (io) {
       console.log(`Socket ${socket.id} salió de sala abuelo_${abuelo_id}`);
     });
 
+    // Sala pública con las ubicaciones aproximadas de los cuidadores libres
+    socket.on('unirse_a_cuidadores_libres', () => {
+      socket.join('cuidadores_libres');
+      console.log(`Socket ${socket.id} se unió a cuidadores_libres`);
+    });
+
+    socket.on('salir_de_cuidadores_libres', () => {
+      socket.leave('cuidadores_libres');
+      console.log(`Socket ${socket.id} salió de cuidadores_libres`);
+    });
+
     socket.on('disconnect', () => {
       console.log('Cliente desconectado:', socket.id);
     });
